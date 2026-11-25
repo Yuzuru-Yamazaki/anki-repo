@@ -1,8 +1,0 @@
-# Grade 12 sample deck
-What is the integral of 2x with respect to x?::x² + C
-
-Which data structure uses LIFO ordering?::Stack
-
-What does HTTP status 404 mean?::Not Found
-
-What is the capital of Ethiopia?::Addis Ababa

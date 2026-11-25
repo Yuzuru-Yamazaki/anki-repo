@@ -78,7 +78,7 @@ pub struct GenerateOptions<'a> {
 pub fn generate(paths: &[PathBuf], options: &GenerateOptions<'_>, output: &Path) -> Result<usize> {
     let global_tags = parser::parse_tags_text(options.tags);
 
-    let parsed: Vec<Result<ParsedFile>> = paths
+    let parsed: Vec<Result<Vec<ParsedFile>>> = paths
         .par_iter()
         .map(|path| {
             let bytes = std::fs::read(path)
@@ -95,31 +95,32 @@ pub fn generate(paths: &[PathBuf], options: &GenerateOptions<'_>, output: &Path)
     let mut decks: Vec<DeckInput> = Vec::new();
     let mut index: HashMap<String, usize> = HashMap::new();
     for (path, result) in paths.iter().zip(parsed) {
-        let mut file = result?;
-        let name = options
-            .deck
-            .map(str::to_owned)
-            .or(file.deck)
-            .unwrap_or_else(|| {
-                path.file_stem()
-                    .and_then(|stem| stem.to_str())
-                    .unwrap_or("Deck")
-                    .replace('_', " ")
-            });
-        for card in &mut file.cards {
-            if !global_tags.is_empty() {
-                card.tags.reserve(global_tags.len());
-                card.tags.extend(global_tags.iter().cloned());
-            }
-        }
-        match index.get(&name) {
-            Some(&position) => decks[position].cards.extend(file.cards),
-            None => {
-                index.insert(name.clone(), decks.len());
-                decks.push(DeckInput {
-                    name,
-                    cards: file.cards,
+        for mut file in result? {
+            let name = options
+                .deck
+                .map(str::to_owned)
+                .or(file.deck)
+                .unwrap_or_else(|| {
+                    path.file_stem()
+                        .and_then(|stem| stem.to_str())
+                        .unwrap_or("Deck")
+                        .replace('_', " ")
                 });
+            for card in &mut file.cards {
+                if !global_tags.is_empty() {
+                    card.tags.reserve(global_tags.len());
+                    card.tags.extend(global_tags.iter().cloned());
+                }
+            }
+            match index.get(&name) {
+                Some(&position) => decks[position].cards.extend(file.cards),
+                None => {
+                    index.insert(name.clone(), decks.len());
+                    decks.push(DeckInput {
+                        name,
+                        cards: file.cards,
+                    });
+                }
             }
         }
     }

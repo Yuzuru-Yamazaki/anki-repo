@@ -63,6 +63,29 @@ class ParserTests(unittest.TestCase):
         self.assertEqual(cards[0], {"text": "Paris is in {{c1::France}}"})
         self.assertEqual(cards[1]["extra"], "Guido")
 
+    def test_json_decks_defines_nested_subdecks(self):
+        text = json.dumps(
+            {
+                "tags": ["school"],
+                "decks": [
+                    {
+                        "name": "School::Grade 9",
+                        "cards": [{"question": "Q1", "answer": "A1"}],
+                    },
+                    {
+                        "deck": "School::Grade 10::Math",
+                        "cards": [{"question": "Q2", "answer": "A2"}],
+                    },
+                ],
+            }
+        )
+        files = apkggen.parse_json_files(text)
+        self.assertEqual([deck for deck, _, _ in files], [
+            "School::Grade 9",
+            "School::Grade 10::Math",
+        ])
+        self.assertEqual(files[0][1][0]["tags"], ["school"])
+
     def test_model_override_beats_json_declared_model(self):
         text = json.dumps(
             {

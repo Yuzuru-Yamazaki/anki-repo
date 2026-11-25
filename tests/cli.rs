@@ -58,6 +58,7 @@ fn read_db(path: &std::path::Path) -> (Vec<String>, Vec<i64>, Vec<String>, Vec<S
 fn txt_splits_on_double_colon_and_joins_answer_lines() {
     let text = b"# comment\nCapital of Japan::Tokyo\n\nWhat is 2 + 2?\n4\nbecause math";
     let parsed = parse_txt_bytes(text, None).unwrap();
+    let parsed = &parsed[0];
     assert_eq!(parsed.cards[0].fields, ["Capital of Japan", "Tokyo"]);
     assert_eq!(
         parsed.cards[1].fields,
@@ -90,6 +91,7 @@ fn json_accepts_aliases_tags_and_cloze() {
         ]
     }"#;
     let parsed = parse_json_bytes(text, None).unwrap();
+    let parsed = &parsed[0];
     assert_eq!(parsed.deck.as_deref(), Some("Science"));
     assert_eq!(parsed.cards[0].fields, ["H2O?", "Water"]);
     assert_eq!(parsed.cards[0].tags, ["chem", "shared"]);
@@ -97,7 +99,23 @@ fn json_accepts_aliases_tags_and_cloze() {
 
     let cloze = br#"{"model":"cloze","cards":["Paris is in {{c1::France}}"]}"#;
     let parsed = parse_json_bytes(cloze, None).unwrap();
-    assert_eq!(parsed.cards[0].note_type, NoteType::Cloze);
+    assert_eq!(parsed[0].cards[0].note_type, NoteType::Cloze);
+}
+
+#[test]
+fn json_decks_defines_nested_subdecks() {
+    let text = br#"{
+        "tags": ["school"],
+        "decks": [
+            {"name": "School::Grade 9", "cards": [{"question": "Q1", "answer": "A1"}]},
+            {"deck": "School::Grade 10::Math", "cards": [{"question": "Q2", "answer": "A2"}]}
+        ]
+    }"#;
+    let parsed = parse_json_bytes(text, None).unwrap();
+    assert_eq!(parsed.len(), 2);
+    assert_eq!(parsed[0].deck.as_deref(), Some("School::Grade 9"));
+    assert_eq!(parsed[1].deck.as_deref(), Some("School::Grade 10::Math"));
+    assert_eq!(parsed[0].cards[0].tags, ["school"]);
 }
 
 #[test]

@@ -1,0 +1,72 @@
+{
+  "tags": ["school", "test"],
+  "decks": [
+    {
+      "name": "School",
+      "cards": [
+        { "question": "Which top-level deck holds the whole curriculum?", "answer": "School" },
+        { "question": "How are grade 10 subjects organized?", "answer": "As subdecks under School::Grade 10 using ::" }
+      ]
+    },
+    {
+      "name": "School::Grade 9",
+      "tags": ["grade9"],
+      "cards": [
+        { "question": "What is the basic unit of life?", "answer": "The cell" },
+        { "question": "Which organelle produces energy in a cell?", "answer": "Mitochondria" },
+        { "question": "What is the formula for the area of a rectangle?", "answer": "length × width" },
+        { "question": "Which planet is closest to the Sun?", "answer": "Mercury" }
+      ]
+    },
+    {
+      "name": "School::Grade 10::Math",
+      "tags": ["grade10", "math"],
+      "cards": [
+        { "question": "Solve for x: 2x + 6 = 14", "answer": "x = 4" },
+        { "question": "What is the area of a circle?", "answer": "πr²" },
+        { "question": "What is the derivative of x²?", "answer": "2x" },
+        { "question": "What is the Pythagorean theorem?", "answer": "a² + b² = c²" }
+      ]
+    },
+    {
+      "name": "School::Grade 10::English",
+      "tags": ["grade10", "english"],
+      "cards": [
+        { "question": "What is a noun?", "answer": "A word that names a person, place, thing, or idea" },
+        { "question": "What is a verb?", "answer": "A word that describes an action or state" },
+        { "question": "What is a synonym for 'happy'?", "answer": "Joyful" },
+        { "question": "What is an antonym for 'ancient'?", "answer": "Modern" }
+      ]
+    },
+    {
+      "name": "School::Grade 10::Physics",
+      "tags": ["grade10", "physics"],
+      "cards": [
+        { "question": "What is the SI unit of force?", "answer": "Newton" },
+        { "question": "What is Newton's second law?", "answer": "Force equals mass times acceleration" },
+        { "question": "What is the SI unit of energy?", "answer": "Joule" },
+        { "question": "What is the speed of light in vacuum?", "answer": "About 3 × 10⁸ m/s" }
+      ]
+    },
+    {
+      "name": "School::Grade 11",
+      "tags": ["grade11"],
+      "cards": [
+        { "question": "What is the chemical symbol for sodium?", "answer": "Na" },
+        { "question": "What type of bond shares electron pairs?", "answer": "Covalent bond" },
+        { "question": "What molecule carries genetic information?", "answer": "DNA" },
+        { "question": "What is the integral of 2x with respect to x?", "answer": "x² + C" }
+      ]
+    },
+    {
+      "name": "School::Grade 12",
+      "tags": ["grade12"],
+      "cards": [
+        { "question": "Which data structure uses LIFO ordering?", "answer": "Stack" },
+        { "question": "What does HTTP status 404 mean?", "answer": "Not Found" },
+        { "question": "What is the capital of Ethiopia?", "answer": "Addis Ababa" },
+        { "question": "What gas do plants release during photosynthesis?", "answer": "Oxygen" }
+      ]
+    }
+  ]
+}

@@ -103,7 +103,7 @@ def first_present(item, keys):
 def parse_json(text, model_override=None):
     data = json.loads(text)
     if isinstance(data, dict):
-        deck = data.get("deck")
+        deck = data.get("deck") or data.get("name")
         declared = data.get("model")
         if declared is not None and declared not in MODELS:
             raise ValueError(f"unknown model {declared!r}; expected one of {', '.join(MODELS)}")
@@ -157,6 +157,40 @@ def parse_json(text, model_override=None):
     return deck, cards
 
 
+def parse_json_files(text, model_override=None):
+    data = json.loads(text)
+    if not isinstance(data, dict) or "decks" not in data:
+        declared = data.get("model") if isinstance(data, dict) else None
+        if declared is not None and declared not in MODELS:
+            raise ValueError(f"unknown model {declared!r}; expected one of {', '.join(MODELS)}")
+        deck, cards = parse_json(text, model_override)
+        return [(deck, cards, model_override or declared or BASIC)]
+
+    raw_decks = data["decks"]
+    if not isinstance(raw_decks, list):
+        raise ValueError('"decks" must be a list')
+    declared = data.get("model")
+    if declared is not None and declared not in MODELS:
+        raise ValueError(f"unknown model {declared!r}; expected one of {', '.join(MODELS)}")
+    inherited_tags = normalize_tags(data.get("tags"))
+
+    files = []
+    for index, entry in enumerate(raw_decks, 1):
+        if not isinstance(entry, dict):
+            raise ValueError(f"deck {index} must be an object")
+        payload = dict(entry)
+        if "deck" not in payload and "name" in payload:
+            payload["deck"] = payload["name"]
+        if "model" not in payload and declared is not None:
+            payload["model"] = declared
+        deck, cards = parse_json(json.dumps(payload), model_override)
+        entry_declared = payload.get("model")
+        for card in cards:
+            card["tags"] = normalize_tags(card.get("tags")) + inherited_tags
+        files.append((deck, cards, model_override or entry_declared or BASIC))
+    return files
+
+
 def build_package(paths, deck_override=None, model_override=None, tags_override=None):
     decks = {}
     models = {}
@@ -166,34 +200,29 @@ def build_package(paths, deck_override=None, model_override=None, tags_override=
         text = path.read_text(encoding="utf-8")
         if path.suffix.lower() == ".txt":
             file_deck, cards = parse_txt(text, model_override)
-            card_type = model_override or BASIC
+            entries = [(file_deck, cards, model_override or BASIC)]
         elif path.suffix.lower() == ".json":
-            file_deck, cards = parse_json(text, model_override)
-            declared = None
-            if model_override is None:
-                data = json.loads(text)
-                if isinstance(data, dict):
-                    declared = data.get("model")
-            card_type = model_override or declared or BASIC
+            entries = parse_json_files(text, model_override)
         else:
             raise ValueError(f"unsupported input type {path.suffix!r}; expected .txt or .json")
 
-        deck_name = deck_override or file_deck or path.stem.replace("_", " ")
-        if deck_name not in decks:
-            decks[deck_name] = genanki.Deck(stable_id(f"deck:{deck_name}"), deck_name)
-        if card_type not in models:
-            models[card_type] = make_model(card_type)
+        for file_deck, cards, card_type in entries:
+            deck_name = deck_override or file_deck or path.stem.replace("_", " ")
+            if deck_name not in decks:
+                decks[deck_name] = genanki.Deck(stable_id(f"deck:{deck_name}"), deck_name)
+            if card_type not in models:
+                models[card_type] = make_model(card_type)
 
-        for card in cards:
-            if card_type == BASIC:
-                fields = [card["question"], card["answer"]]
-            else:
-                fields = [card["text"], card.get("extra", "")]
-            tags = global_tags + normalize_tags(card.get("tags"))
-            decks[deck_name].add_note(
-                genanki.Note(model=models[card_type], fields=fields, tags=tags)
-            )
-            total += 1
+            for card in cards:
+                if card_type == BASIC:
+                    fields = [card["question"], card["answer"]]
+                else:
+                    fields = [card["text"], card.get("extra", "")]
+                tags = global_tags + normalize_tags(card.get("tags"))
+                decks[deck_name].add_note(
+                    genanki.Note(model=models[card_type], fields=fields, tags=tags)
+                )
+                total += 1
     return genanki.Package(list(decks.values())), total
 
 

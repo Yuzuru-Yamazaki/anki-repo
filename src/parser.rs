@@ -45,7 +45,7 @@ fn flush_block(block: &mut Vec<&str>, note_type: NoteType, cards: &mut Vec<Card>
     Ok(())
 }
 
-pub fn parse_txt_bytes(bytes: &[u8], override_type: Option<NoteType>) -> Result<ParsedFile> {
+pub fn parse_txt_bytes(bytes: &[u8], override_type: Option<NoteType>) -> Result<Vec<ParsedFile>> {
     let text = std::str::from_utf8(bytes)
         .map_err(|error| anyhow::anyhow!("input is not valid UTF-8: {error}"))?;
     let note_type = override_type.unwrap_or(NoteType::Basic);
@@ -60,7 +60,7 @@ pub fn parse_txt_bytes(bytes: &[u8], override_type: Option<NoteType>) -> Result<
         }
     }
     flush_block(&mut block, note_type, &mut cards)?;
-    Ok(ParsedFile { deck: None, cards })
+    Ok(vec![ParsedFile { deck: None, cards }])
 }
 
 pub fn cloze_ords(text: &str) -> Vec<u16> {
@@ -136,16 +136,48 @@ fn get_field<'a>(map: &'a Map<String, Value>, keys: &[&str]) -> Option<&'a str> 
     None
 }
 
-pub fn parse_json_bytes(bytes: &[u8], override_type: Option<NoteType>) -> Result<ParsedFile> {
+pub fn parse_json_bytes(bytes: &[u8], override_type: Option<NoteType>) -> Result<Vec<ParsedFile>> {
     let value: Value = serde_json::from_slice(bytes)?;
-    let (deck, declared, raw_cards, inherited_tags) = match &value {
-        Value::Object(map) => {
-            let deck = map.get("deck").and_then(Value::as_str).map(str::to_owned);
-            let declared = match map.get("model") {
-                Some(Value::String(name)) => Some(NoteType::parse(name)?),
-                Some(_) => bail!("model must be a string"),
-                None => None,
+    if let Value::Object(map) = &value
+        && let Some(Value::Array(deck_values)) = map.get("decks")
+    {
+        let inherited_tags = parse_tags(map.get("tags"));
+        let inherited_model = parse_model(map.get("model"))?;
+        let mut files = Vec::with_capacity(deck_values.len());
+        for deck_value in deck_values {
+            let mut file = parse_json_value(deck_value, override_type.or(inherited_model))?;
+            let name = match file.deck.take() {
+                Some(name) => name,
+                None => bail!("every entry in decks needs a deck or name field"),
             };
+            for card in &mut file.cards {
+                card.tags.extend(inherited_tags.iter().cloned());
+            }
+            file.deck = Some(name);
+            files.push(file);
+        }
+        return Ok(files);
+    }
+    Ok(vec![parse_json_value(&value, override_type)?])
+}
+
+fn parse_model(value: Option<&Value>) -> Result<Option<NoteType>> {
+    match value {
+        Some(Value::String(name)) => Ok(Some(NoteType::parse(name)?)),
+        Some(_) => bail!("model must be a string"),
+        None => Ok(None),
+    }
+}
+
+fn parse_json_value(value: &Value, override_type: Option<NoteType>) -> Result<ParsedFile> {
+    let (deck, declared, raw_cards, inherited_tags) = match value {
+        Value::Object(map) => {
+            let deck = map
+                .get("deck")
+                .or_else(|| map.get("name"))
+                .and_then(Value::as_str)
+                .map(str::to_owned);
+            let declared = parse_model(map.get("model"))?;
             let raw_cards = match map.get("cards") {
                 Some(Value::Array(cards)) => cards,
                 Some(_) => bail!("cards must be a list"),

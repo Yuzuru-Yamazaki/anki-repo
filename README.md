@@ -8,7 +8,7 @@ Shared Anki packages plus a fast generator that builds them from plain text or J
 | --- | --- |
 | `implementation_plan.md` | Spec for the Anki-compatible flashcards workspace |
 | `trivia.apkg` | Sample 20-card general trivia deck |
-| `grade9/` … `grade12/` | One test deck per grade, with its `test.txt` source and generated `test.apkg` |
+| `school.json` / `school.apkg` | Single package with a `School` root deck and nested grade/subject subdecks |
 | `src/` | Rust implementation of `apkggen` (library + CLI) |
 | `tests/cli.rs` | Rust integration tests |
 | `apkggen.py` | Original Python implementation, kept as a reference |
@@ -36,12 +36,24 @@ cargo build --release
 
 With one input the default output is `<input-stem>.apkg`; with several inputs it is `decks.apkg`. Multiple inputs are combined into one package with one deck per file, unless `--deck` merges them all.
 
-## Grade test decks
+## School deck
 
-`grade9/` through `grade12/` each contain a four-card `test.apkg` and the `test.txt` it was built from. Deck names are `Grade N Test` and cards are tagged `test` and `gradeN`. Rebuild any deck with:
+`school.apkg` is generated from `school.json`. It contains 26 test cards across one root deck and six subdecks, using Anki's `::` hierarchy so the site renders them as a tree:
+
+```text
+School
+├── School::Grade 9
+├── School::Grade 10::Math
+├── School::Grade 10::English
+├── School::Grade 10::Physics
+├── School::Grade 11
+└── School::Grade 12
+```
+
+Rebuild it with:
 
 ```bash
-./target/release/apkggen grade11/test.txt -o grade11/test.apkg -d "Grade 11 Test" -t "test,grade11"
+./target/release/apkggen school.json -o school.apkg
 ```
 
 ## `.txt` format
@@ -100,6 +112,18 @@ For `"model": "cloze"`, use `text` / `front` / `q` for the cloze text and option
 ```
 
 Per-card `tags` are merged with top-level `tags` and `--tags`. Spaces in tags become underscores.
+
+To define several decks in one file, use a top-level `decks` list. Each entry accepts `name` (or `deck`), `model`, `tags`, and `cards`; top-level `tags` and `model` are inherited. Deck names containing `::` become Anki subdecks:
+
+```json
+{
+  "tags": ["school"],
+  "decks": [
+    { "name": "School::Grade 10::Math", "cards": [{ "question": "2 + 2?", "answer": "4" }] },
+    { "name": "School::Grade 10::Physics", "cards": [{ "question": "SI unit of force?", "answer": "Newton" }] }
+  ]
+}
+```
 
 ## How it works
 
