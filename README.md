@@ -8,6 +8,7 @@ Shared Anki packages plus a fast generator that builds them from plain text or J
 | --- | --- |
 | `implementation_plan.md` | Spec for the Anki-compatible flashcards workspace |
 | `trivia.apkg` | Sample 20-card general trivia deck |
+| `grade9/` … `grade12/` | One test deck per grade, with its `test.txt` source and generated `test.apkg` |
 | `src/` | Rust implementation of `apkggen` (library + CLI) |
 | `tests/cli.rs` | Rust integration tests |
 | `apkggen.py` | Original Python implementation, kept as a reference |
@@ -34,6 +35,14 @@ cargo build --release
 | `--compression {balanced,fast,best}` | Deflate level 6, 1, or 9 (default: balanced) |
 
 With one input the default output is `<input-stem>.apkg`; with several inputs it is `decks.apkg`. Multiple inputs are combined into one package with one deck per file, unless `--deck` merges them all.
+
+## Grade test decks
+
+`grade9/` through `grade12/` each contain a four-card `test.apkg` and the `test.txt` it was built from. Deck names are `Grade N Test` and cards are tagged `test` and `gradeN`. Rebuild any deck with:
+
+```bash
+./target/release/apkggen grade11/test.txt -o grade11/test.apkg -d "Grade 11 Test" -t "test,grade11"
+```
 
 ## `.txt` format
 

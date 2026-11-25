@@ -1,0 +1,8 @@
+# Grade 11 sample deck
+What is the chemical symbol for sodium?::Na
+
+What is Newton's second law?::Force equals mass times acceleration
+
+What type of bond shares electron pairs?::Covalent bond
+
+What is the derivative of x²?::2x
