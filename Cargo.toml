@@ -1,0 +1,23 @@
+[package]
+name = "apkggen"
+version = "0.2.0"
+edition = "2024"
+description = "Fast .txt/.json to Anki .apkg generator"
+
+[dependencies]
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
+rayon = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+tempfile = "3"
+rusqlite = { version = "0.43", features = ["bundled"] }
+zip = { version = "8", default-features = false, features = ["deflate-flate2-zlib-rs"] }
+
+[profile.release]
+opt-level = 3
+lto = false
+codegen-units = 16
+panic = "abort"
+strip = true
