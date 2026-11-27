@@ -49,16 +49,6 @@
       ]
     },
     {
-      "name": "School::Grade 11",
-      "tags": ["grade11"],
-      "cards": [
-        { "question": "What is the chemical symbol for sodium?", "answer": "Na" },
-        { "question": "What type of bond shares electron pairs?", "answer": "Covalent bond" },
-        { "question": "What molecule carries genetic information?", "answer": "DNA" },
-        { "question": "What is the integral of 2x with respect to x?", "answer": "x² + C" }
-      ]
-    },
-    {
       "name": "School::Grade 12",
       "tags": ["grade12"],
       "cards": [
