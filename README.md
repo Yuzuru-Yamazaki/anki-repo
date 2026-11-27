@@ -9,6 +9,7 @@ Shared Anki packages plus a fast generator that builds them from plain text or J
 | `implementation_plan.md` | Spec for the Anki-compatible flashcards workspace |
 | `trivia.apkg` | Sample 20-card general trivia deck |
 | `school.json` / `school.apkg` | Single package with a `School` root deck and nested grade/subject subdecks |
+| `grade11.json` / `grade11.apkg` | Exhaustive Grade 11 Agriculture deck: 2,188 notes across all 16 units and their numbered topic subdecks |
 | `src/` | Rust implementation of `apkggen` (library + CLI) |
 | `tests/cli.rs` | Rust integration tests |
 | `apkggen.py` | Original Python implementation, kept as a reference |
@@ -54,6 +55,25 @@ Rebuild it with:
 
 ```bash
 ./target/release/apkggen school.json -o school.apkg
+```
+
+## Grade 11 Agriculture deck
+
+`grade11.apkg` is generated from `grade11.json`, which follows the multi-deck JSON format documented below. It covers all 16 units of the Grade 11 Agriculture student textbook. Deck names use `Grade 11::Unit N::X.Y[.Z] Topic`, so Anki renders units as subdecks and numbered topics as nested subdecks. Cards mix `basic` (explanations, comparisons, why/how) and `cloze` (terms, names, numbers, definitions, steps) notes, chosen by the kind of information. All cards carry the `grade11`, `agriculture`, `ethiopia`, `curriculum` and per-unit tags.
+
+```text
+Grade 11
+├── Unit 1::1.1 Definition of Common Terms Used in Crop Production
+├── Unit 1::1.4.1 Major food crops
+├── Unit 9::9.4.2 Milk processing
+└── Unit 16::16.4 Indigenous knowledge in nutrition sensitive agriculture
+```
+
+Rebuild it with the Rust binary or the Python reference:
+
+```bash
+./target/release/apkggen grade11.json -o grade11.apkg
+python3 apkggen.py grade11.json -o grade11.apkg
 ```
 
 ## `.txt` format
